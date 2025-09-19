@@ -86,7 +86,6 @@ class SecureWipeUI(QMainWindow):
     color: #FFFFFF;
     padding: 16px;
     border-radius: 6px;
-    hover::{}
 """)
 
         self.cert_btn.clicked.connect(self.open_certificate)
