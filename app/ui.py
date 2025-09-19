@@ -1,46 +1,105 @@
-import tkinter as tk
-from tkinter import filedialog, messagebox
-from app.wipe import wipe_files
-from app.verifier import generate_certificate
-from app.utils import is_safe_path
 import os
+from PyQt5.QtWidgets import (
+    QMainWindow, QLabel, QPushButton, QFileDialog,
+    QMessageBox, QVBoxLayout, QHBoxLayout, QWidget
+)
+from PyQt5.QtCore import Qt
+from .wipe import wipe_files
+from .verifier import generate_certificate
+from .utils import is_safe_path
 
-class SecureWipeUI:
+CERTIFICATE_PATH = os.path.expanduser("~/wipe_certificate.json")
+
+class SecureWipeUI(QMainWindow):
     def __init__(self):
-        self.root = tk.Tk()
-        self.root.title("Secure Wipe Tool")
-        self.root.geometry("400x250")
-        
-        self.label = tk.Label(self.root, text="Select files/folders to securely wipe:")
-        self.label.pack(pady=10)
-
-        self.select_btn = tk.Button(self.root, text="Select Files/Folders", command=self.select_files)
-        self.select_btn.pack(pady=5)
-
-        self.wipe_btn = tk.Button(self.root, text="Start Wipe", command=self.start_wipe, state=tk.DISABLED)
-        self.wipe_btn.pack(pady=5)
-
+        super().__init__()
+        self.setWindowTitle("Secure Wipe Tool")
+        self.setGeometry(300, 150, 500, 300)
+        self.setStyleSheet("background-color: #2C3E50; color: white; font-size: 14px;")
         self.selected_paths = []
 
+        # Central widget
+        central = QWidget()
+        self.setCentralWidget(central)
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignCenter)
+
+        # Label
+        self.label = QLabel("Select files/folders to securely wipe:")
+        self.label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.label)
+
+        # Buttons
+        button_layout = QHBoxLayout()
+        self.select_btn = QPushButton("Select Files/Folders")
+        self.select_btn.setStyleSheet("background-color: #1ABC9C; color: white; padding: 8px; border-radius: 5px;")
+        self.select_btn.clicked.connect(self.select_files)
+        button_layout.addWidget(self.select_btn)
+
+        self.wipe_btn = QPushButton("Start Wipe")
+        self.wipe_btn.setStyleSheet("background-color: #E74C3C; color: white; padding: 8px; border-radius: 5px;")
+        self.wipe_btn.setEnabled(False)
+        self.wipe_btn.clicked.connect(self.start_wipe)
+        button_layout.addWidget(self.wipe_btn)
+
+        layout.addLayout(button_layout)
+
+        # Certificate + clear buttons
+        action_layout = QHBoxLayout()
+        self.cert_btn = QPushButton("Open Certificate")
+        self.cert_btn.setStyleSheet("background-color: #27AE60; color: white; padding: 8px; border-radius: 5px;")
+        self.cert_btn.clicked.connect(self.open_certificate)
+        action_layout.addWidget(self.cert_btn)
+
+        self.clear_btn = QPushButton("Clear Selection")
+        self.clear_btn.setStyleSheet("background-color: #F39C12; color: white; padding: 8px; border-radius: 5px;")
+        self.clear_btn.clicked.connect(self.clear_selection)
+        action_layout.addWidget(self.clear_btn)
+
+        layout.addLayout(action_layout)
+        central.setLayout(layout)
+
     def select_files(self):
-        paths = filedialog.askopenfilenames(title="Select files or folders")
+        paths, _ = QFileDialog.getOpenFileNames(self, "Select Files or Folders")
+        if not paths:
+            path = QFileDialog.getExistingDirectory(self, "Select Folder")
+            if path:
+                paths = [path]
         if paths:
             safe_paths = [p for p in paths if is_safe_path(p)]
             if not safe_paths:
-                messagebox.showerror("Error", "No valid files/folders selected.")
+                QMessageBox.critical(self, "Error", "No valid files/folders selected.")
                 return
             self.selected_paths = safe_paths
-            self.wipe_btn.config(state=tk.NORMAL)
-            messagebox.showinfo("Selected", f"{len(self.selected_paths)} files/folders selected.")
+            self.wipe_btn.setEnabled(True)
+            QMessageBox.information(self, "Selected", f"{len(self.selected_paths)} files/folders selected.")
 
     def start_wipe(self):
         if not self.selected_paths:
-            messagebox.showwarning("Warning", "No files selected.")
+            QMessageBox.warning(self, "Warning", "No files selected.")
             return
         for path in self.selected_paths:
             wipe_files(path)
-        cert_path = generate_certificate(self.selected_paths)
-        messagebox.showinfo("Success", f"Wipe completed!\nCertificate: {cert_path}")
+        cert_path = generate_certificate(self.selected_paths, parent=self)
+        global CERTIFICATE_PATH
+        CERTIFICATE_PATH = cert_path
+        QMessageBox.information(self, "Success", f"Wipe completed!\nCertificate: {cert_path}")
+        self.selected_paths = []
+        self.wipe_btn.setEnabled(False)
 
-    def run(self):
-        self.root.mainloop()
+    def open_certificate(self):
+        if os.path.exists(CERTIFICATE_PATH):
+            try:
+                if os.name == "nt":
+                    os.startfile(CERTIFICATE_PATH)
+                elif os.name == "posix":
+                    os.system(f"xdg-open '{CERTIFICATE_PATH}'")
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Cannot open certificate: {e}")
+        else:
+            QMessageBox.information(self, "Not Found", "No certificate found yet!")
+
+    def clear_selection(self):
+        self.selected_paths = []
+        self.wipe_btn.setEnabled(False)
+        QMessageBox.information(self, "Cleared", "Selection cleared.")
