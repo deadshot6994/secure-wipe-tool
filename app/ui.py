@@ -1,4 +1,5 @@
 import os
+
 from PyQt5.QtWidgets import (
     QMainWindow, QLabel, QPushButton, QFileDialog,
     QMessageBox, QVBoxLayout, QHBoxLayout, QWidget
@@ -10,12 +11,25 @@ from .utils import is_safe_path
 
 CERTIFICATE_PATH = os.path.expanduser("~/wipe_certificate.json")
 
+
 class SecureWipeUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Secure Wipe Tool")
         self.setGeometry(300, 150, 500, 300)
-        self.setStyleSheet("background-color: #2C3E50; color: white; font-size: 14px;")
+
+        # ✅ Minimalist background + font
+        self.setStyleSheet("""
+    background-color: #2F3E46;
+    font-size: 12px;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #FFFFFF;
+    padding: 12px;
+    border-radius: 6px;
+    letter-spacing : 1px;
+""")
+
+
         self.selected_paths = []
 
         # Central widget
@@ -25,19 +39,36 @@ class SecureWipeUI(QMainWindow):
         layout.setAlignment(Qt.AlignCenter)
 
         # Label
-        self.label = QLabel("Select files/folders to securely wipe:")
+        self.label = QLabel("SELECT FILES/FOLDERS TO SECURELY WIPE")
         self.label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.label)
 
         # Buttons
         button_layout = QHBoxLayout()
-        self.select_btn = QPushButton("Select Files/Folders")
-        self.select_btn.setStyleSheet("background-color: #1ABC9C; color: white; padding: 8px; border-radius: 5px;")
+
+        self.select_btn = QPushButton("SELECT FILE/FOLDERS")
+        self.select_btn.setStyleSheet("""
+    background-color: #52796F;
+    font-size: 11px;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #FFFFFF;
+    padding: 16px;
+    border-radius: 6px;
+""")
+
         self.select_btn.clicked.connect(self.select_files)
         button_layout.addWidget(self.select_btn)
 
-        self.wipe_btn = QPushButton("Start Wipe")
-        self.wipe_btn.setStyleSheet("background-color: #E74C3C; color: white; padding: 8px; border-radius: 5px;")
+        self.wipe_btn = QPushButton("START WIPE")
+        self.wipe_btn.setStyleSheet("""
+    background-color: #52796F;
+    font-size: 11px;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #FFFFFF;
+    padding: 16px;
+    border-radius: 6px;
+""")
+
         self.wipe_btn.setEnabled(False)
         self.wipe_btn.clicked.connect(self.start_wipe)
         button_layout.addWidget(self.wipe_btn)
@@ -46,13 +77,31 @@ class SecureWipeUI(QMainWindow):
 
         # Certificate + clear buttons
         action_layout = QHBoxLayout()
-        self.cert_btn = QPushButton("Open Certificate")
-        self.cert_btn.setStyleSheet("background-color: #27AE60; color: white; padding: 8px; border-radius: 5px;")
+
+        self.cert_btn = QPushButton("OPEN CERTIFICATE")
+        self.cert_btn.setStyleSheet("""
+    background-color: #52796F;
+    font-size: 11px;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #FFFFFF;
+    padding: 16px;
+    border-radius: 6px;
+    hover::{}
+""")
+
         self.cert_btn.clicked.connect(self.open_certificate)
         action_layout.addWidget(self.cert_btn)
 
-        self.clear_btn = QPushButton("Clear Selection")
-        self.clear_btn.setStyleSheet("background-color: #F39C12; color: white; padding: 8px; border-radius: 5px;")
+        self.clear_btn = QPushButton("CLEAR SELECTION")
+        self.clear_btn.setStyleSheet("""
+    background-color: #52796F;
+    font-size: 11px;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #FFFFFF;
+    padding: 16px;
+    border-radius: 6px;
+""")
+
         self.clear_btn.clicked.connect(self.clear_selection)
         action_layout.addWidget(self.clear_btn)
 

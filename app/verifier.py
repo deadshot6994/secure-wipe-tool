@@ -2,16 +2,17 @@ import json
 from reportlab.pdfgen import canvas
 from datetime import datetime
 import os
-from tkinter import filedialog
+from PyQt5.QtWidgets import QFileDialog
 
-def generate_certificate(paths):
-    """Generate or update wipe certificate (JSON + PDF)."""
+def generate_certificate(paths, parent=None):
+    """Generate or update wipe certificate (JSON + PDF) with PyQt5 file dialog."""
 
     # Let user select save location
-    cert_base = filedialog.asksaveasfilename(
-        title="Save Certificate",
-        defaultextension=".json",
-        filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+    cert_base, _ = QFileDialog.getSaveFileName(
+        parent,
+        "Save Certificate",
+        os.path.expanduser("~/wipe_certificate.json"),
+        "JSON Files (.json);;All Files ()"
     )
 
     if not cert_base:
